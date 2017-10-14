@@ -7,7 +7,7 @@ describe 'Locations', ->
 
   describe '#find()', ->
 
-    it.only 'returns location data for valid location', ->
+    it 'returns location data for valid location', ->
       model.find 'IST'
       .then (data) ->
         expect(data).to.be.an('object')

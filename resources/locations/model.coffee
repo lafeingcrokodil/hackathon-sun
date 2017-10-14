@@ -7,7 +7,7 @@ module.exports.find = (code) ->
   locationCache code, lookup
 
 lookup = (code) ->
-  # TODO: query API for lat/long and city name data
+  # query API for lat/long and city name data
   options = {
     uri: 'https://api.sandbox.amadeus.com/v1.2/location/' + code
     qs: {
