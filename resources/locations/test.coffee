@@ -11,7 +11,7 @@ describe 'Locations', ->
       model.find 'IST'
       .then (data) ->
         expect(data).to.be.an('object')
-        expect(data).to.have.all.keys(['lat', 'lon', 'city', 'country'])
+        expect(data).to.have.all.keys(['latitude', 'longitude', 'city', 'country'])
         # TODO: check that lat and lon are floats within valid ranges
         # TODO: check that city and country are valid strings
 

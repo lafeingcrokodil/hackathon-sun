@@ -18,8 +18,8 @@ lookup = (code) ->
 
   rp(options).then (res) ->
     details = {
-      lon: res.city.location.long
-      lat: res.city.location.lat
-      city: res.city.city_name
+      longitude: res.city.location.longitude
+      latitude: res.city.location.latitude
+      city: res.city.name
       country: res.city.country
     }
