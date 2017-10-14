@@ -1,12 +1,16 @@
 var path = require('path')
+var Promise = require('bluebird')
 var fs = require('fs');
 var parse = require('../node_modules/csv-parser');
-var inputFile = path.join(__dirname, '../data/flight-search-cache-origin-destination.csv');
 
-var destinations = {};
-var origins = {};
+module.exports.parseFile = function(input){
+  return new Promise(function(resolve, reject) {
 
-fs.createReadStream(inputFile)
+    var inputFile = path.join(__dirname, '../data/flight-search-cache-origin-destination');
+    var destinations = {};
+    var origins = {};
+
+    fs.createReadStream(inputFile)
     .pipe(parse({delimiter: ','}))
     .on('data', function(csvrow) {
       var destination = csvrow.destination;
@@ -15,7 +19,6 @@ fs.createReadStream(inputFile)
 
       destinations[csvrow.destination] = true;
       if (origins[origin]){
-        // console.log(origins[origin]);
         origins[origin].destinations.push(destination);
       } else {
         origins[origin] = {
@@ -26,6 +29,14 @@ fs.createReadStream(inputFile)
 
     })
     .on('end',function() {
-      console.log(Object.keys(destinations));
-      console.log(origins);
+      var output = {
+        destinations: destinations,
+        origins: origins
+      }
+      resolve(output);
+    })
+    .on('error', function(error) {
+      reject(error);
     });
+  });
+}
