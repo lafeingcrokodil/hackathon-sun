@@ -1,4 +1,5 @@
 cache = require '../../lib/cache'
+debug = require('debug')('hackathon-sun:locations')
 rp = require 'request-promise'
 
 weatherCacheTTL = process.env.WEATHER_CACHE_TTL or 3600
@@ -9,6 +10,8 @@ module.exports.find = (location) ->
   weatherCache location.code, lookup(location)
 
 lookup = ({ latitude, longitude }) -> ->
+  debug "api call: #{JSON.stringify({ latitude, longitude })}"
+
   # query API for weather data
   options = {
     uri: 'https://api.openweathermap.org/data/2.5/weather'

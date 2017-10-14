@@ -1,4 +1,5 @@
 cache = require '../../lib/cache'
+debug = require('debug')('hackathon-sun:locations')
 rp = require 'request-promise'
 
 locationCache = new cache
@@ -7,6 +8,8 @@ module.exports.find = (code) ->
   locationCache code, lookup
 
 lookup = (code) ->
+  debug "api call: #{JSON.stringify({ code })}"
+
   # query API for lat/long and city name data
   options = {
     uri: 'https://api.sandbox.amadeus.com/v1.2/location/' + code
