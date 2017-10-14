@@ -1,3 +1,5 @@
+debug = require('debug')('hackathon-sun:error')
+
 module.exports.handler = (err, req, res) ->
   error =
     name: err.name
@@ -5,6 +7,9 @@ module.exports.handler = (err, req, res) ->
   if req.app.get('env') is 'development'
     error.stack = err.stack
   res.send { error }
+
+module.exports.logger = (err) ->
+  debug err.message # TODO: include first line of stack trace
 
 class BadRequestError extends Error
   name: 'BadRequestError'
