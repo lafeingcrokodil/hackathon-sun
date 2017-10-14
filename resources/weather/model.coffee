@@ -1,13 +1,11 @@
-Promise = require 'bluebird'
-cache = {}
+cache = require '../../lib/cache'
 
-module.exports.find = ( {location} ) ->
-  return Promise.resolve cache[location]
-  # TODO account for locations without cached weather data
+weatherCacheTTL = process.env.WEATHER_CACHE_TTL or 3600
+weatherCache = new cache weatherCacheTTL
 
-module.exports.load = ( {locations} ) ->
-  # TODO fill cache global variable
+module.exports.find = (location) ->
+  # We look up the weather by latitude and longitude, but cache it by location code.
+  weatherCache location.code, lookup(location)
 
-
-lookup = ( { location } ) ->
-  #TODO query api for weather data
+lookup = ({ latitude, longitude }) -> ->
+  # TODO: query API for weather data

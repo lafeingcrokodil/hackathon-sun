@@ -1,16 +1,10 @@
-Promise = require 'bluebird'
-csvParser = require '../parser/csvParser.js'
-
-routes = null
-
 module.exports.find = ({ origin }) ->
-  return Promise.resolve []
+  lookup origin
+  .then (flights) ->
+    # TODO: look up location data for destinations
+    # TODO: check weather for destinations
+    # TODO: filter and sort flights
+    return flights
 
-module.exports.load = () ->
-  csvParser.getRoutes()
-    .then ( response ) ->
-        routes = res.origins;
-
-
-lookup = ( { origin, destination } ) ->
-  #TODO query api for cheapest flights data
+lookup = (origin) ->
+  # TODO: query API for cheapest flights
