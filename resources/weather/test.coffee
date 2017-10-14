@@ -11,8 +11,8 @@ describe 'Weather', ->
       model.find { code: 'IST', latitude: 41.01384, longitude: 28.94966 }
       .then (data) ->
         expect(data).to.be.an('object')
-        expect(data).to.have.all.keys(['isClear', 'temperature'])
-        # TODO: check that isClear is either true or false
+        expect(data).to.have.all.keys(['isSunny', 'temperature'])
+        # TODO: check that isSunny is either true or false
         # TODO: check that temperature is an integer representing the temperature in degrees Kelvin
 
     it 'throws error if no location is specified', ->
