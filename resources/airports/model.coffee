@@ -2,6 +2,21 @@ rp = require 'request-promise'
 
 # TODO: find some way to cache results?
 
-# Returns location codes (an array of strings) for nearby airports.
+# Returns location (IATA) codes (an array of strings) for nearby airports.
 module.exports.find = (latitude, longitude) ->
-  # TODO: query API for nearby airports
+  # query API for nearby airports
+  options = {
+    uri: 'https://api.sandbox.amadeus.com/v1.2/airports/nearest-relevant'
+    qs: {
+      apikey: process.env.AMADEUS_API_KEY
+      latitude: latitude
+      longitude: longitude
+    }
+    json: true
+  }
+
+  rp(options).then (res) ->
+    locations = []
+    for item in res
+      locations.push item.airport
+    return locations
