@@ -32,7 +32,7 @@ describe 'Weather', ->
 
     it 'throws error if longitude is missing', ->
       expect ->
-        model.find { code: 'IST' latitude: 41.01384 }
+        model.find { code: 'IST', latitude: 41.01384 }
       .to.throw(errors.BadRequestError, 'Bad Request: missing longitude')
 
     it 'throws error if no weather data can be found', ->
