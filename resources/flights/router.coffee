@@ -9,9 +9,11 @@ model = require './model'
 # GET flights listing.
 router.get '/', (req, res, next) ->
   Promise.try ->
-    origin = req.query?.origin or
-      throw new errors.BadRequestError 'missing origin'
-    model.find { origin }
+    latitude = req.query?.latitude or
+      throw new errors.BadRequestError 'missing latitude'
+    longitude = req.query?.longitude or
+      throw new errors.BadRequestError 'missing longitude'
+    model.find { latitude, longitude }
   .then (data) ->
     res.send { data }
   .catch (err) ->
