@@ -13,3 +13,10 @@ class BadRequestError extends Error
     @message = "Bad Request: #{message}"
 
 module.exports.BadRequestError = BadRequestError
+
+class UnknownLocationError extends Error
+  name: 'UnknownLocationError'
+  constructor: (location) ->
+    @message = "Unknown Location: #{location}"
+
+module.exports.UnknownLocationError = UnknownLocationError
