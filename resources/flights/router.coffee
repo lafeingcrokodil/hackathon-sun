@@ -1,13 +1,20 @@
 express = require 'express'
+Promise = require 'bluebird'
+
 router = express.Router()
 
+errors = require '../errors'
 model = require './model'
 
 # GET flights listing.
 router.get '/', (req, res, next) ->
-  model.find { origin: req.query?.origin }
+  Promise.try ->
+    origin = req.query?.origin or
+      throw new errors.BadRequestError 'missing origin'
+    model.find { origin }
   .then (data) ->
     res.send { data }
-  .catch next
+  .catch (err) ->
+    errors.handler err, req, res
 
 module.exports = router

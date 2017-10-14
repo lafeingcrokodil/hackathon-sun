@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "node ./bin/www",
-    "test": "mocha --compilers coffee:coffee-script/register **/test.coffee"
+    "test": "mocha --require coffee-script/register **/test.coffee"
   },
   "dependencies": {
     "bluebird": "^3.5.1",
