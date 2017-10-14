@@ -3,17 +3,16 @@
 errors = require '../errors'
 model = require './model'
 
-describe 'Weather', ->
+describe 'Locations', ->
 
   describe '#find()', ->
 
-    it 'returns weather data for valid location', ->
+    it 'returns location data for valid location', ->
       model.find { location: 'IST' }
       .then (data) ->
         expect(data).to.be.an('object')
-        expect(data).to.have.all.keys(['isClear', 'temperature'])
-        # TODO: check that isClear is either true or false
-        # TODO: check that temperature is an integer representing the temperature in degrees Kelvin
+        expect(data).to.have.all.keys(['lat', 'lon'])
+        # TODO: check that lat and lon are floats within valid ranges
 
     it 'throws error if no parameters are specified', ->
       expect ->
