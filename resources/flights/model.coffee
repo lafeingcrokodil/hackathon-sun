@@ -9,45 +9,72 @@ airportModel = require '../airports/model'
 locationModel = require '../locations/model'
 weatherModel = require '../weather/model'
 
+BATCH_SIZE = 10
 TRIP_DURATION = 2
 
 module.exports.find = ({ latitude, longitude }) ->
   departureDate = getDepartureDate().format('YYYY-MM-DD')
+  originDetails = null
   cheapestTrip = null
   airportModel.find latitude, longitude
   .then (locationCodes) ->
-    # check for cheap trips originating from each nearby airport
-    Promise.map locationCodes, (locationCode) ->
-      lookupTrips locationCode, departureDate
-    .then flatten # turn array of arrays into a single array
-    .then (trips) ->
-      # determine cheapest trip with sunny weather
-      trips.sort (a, b) -> a.price - b.price # check cheapest trips first
-      Promise.map trips, (trip) ->
-        return if cheapestTrip and trip.price >= cheapestTrip.price
+    unless locationCodes.length
+      throw new errors.NotFoundError 'no nearby airports found'
+    locationModel.find locationCodes[0]
+  .then (location) ->
+    originDetails = location
+    # check for cheap trips departing from the origin city
+    lookupTrips location.code, departureDate
+  .then (trips) ->
+    # determine cheapest trip with sunny weather
+    trips.sort (a, b) -> a.price - b.price # sort by price (ascending order)
+    # process potential trips in batches of 10, starting with the cheapest
+    numBatches = trips.length / BATCH_SIZE
+    Promise.each [0..numBatches], (i) ->
+      return if cheapestTrip # we already found something; no need to keep looking
+      startIndex = 10 * i
+      endIndex = startIndex + BATCH_SIZE - 1
+      Promise.map trips[startIndex..endIndex], (trip) ->
         locationModel.find trip.destination
         .then (location) ->
+          trip.destinationDetails = location
           weatherModel.find location, trip.departure_date, trip.return_date
         .then (weather) ->
           if weather.isSunny
             trip.weather = weather
-            cheapestTrip = trip
+            lookupDetails trip
+            .then ({ meta, results }) ->
+              if results?.length > 0 and (not cheapestTrip or trip.price < cheapestTrip.price)
+                trip.carriers = meta.carriers
+                trip.flights = results
+                cheapestTrip = trip
         .catch errors.logger
-      , { concurrency: 10 } # check up to 10 trips at once
-    .then ->
-      console.log cheapestTrip
-      do process.exit
-      lookupDetails cheapestTrip
-      .then (flights) ->
-        cheapestFlight = null
-        for flight in flights
-          if not cheapestFlight or flight.fare.total_price < cheapestFlight.fare.total_price
-            flight.trip = trip
-            cheapestFlight = flight
-        return cheapestFlight
-  .then (flight) ->
-    console.log flight
-    do process.exit
+  .then ->
+    unless cheapestTrip
+      throw new errors.NotFoundError 'no sunny destination found'
+    cheapestFlight = null
+    for flight in cheapestTrip.flights
+      if not cheapestFlight or flight.fare.total_price < cheapestFlight.fare.total_price
+        cheapestFlight = flight
+
+    price: cheapestFlight.fare.total_price
+    currency: cheapestFlight.fare.currency
+    temperature: weatherModel.toCelsius cheapestTrip.weather.temperature
+    origin: originDetails.city
+    destination: cheapestTrip.destinationDetails.city
+    deepLink: cheapestFlight.deep_link
+    outbound:
+      airlineName: cheapestTrip.carriers[cheapestFlight.outbound.flights[0].marketing_airline].name
+      flightNumber: "#{cheapestFlight.outbound.flights[0].marketing_airline} #{cheapestFlight.outbound.flights[0].flight_number}"
+      date: cheapestTrip.departure_date
+      departureTime: cheapestFlight.outbound.flights[0].departs_at.replace(/.*T/, '') # departure time of first flight
+      arrivalTime: cheapestFlight.outbound.flights[-1..][0].arrives_at.replace(/.*T/, '') # arrival time of last flight
+    inbound:
+      airlineName: cheapestTrip.carriers[cheapestFlight.inbound.flights[0].marketing_airline].name
+      flightNumber: "#{cheapestFlight.inbound.flights[0].marketing_airline} #{cheapestFlight.inbound.flights[0].flight_number}"
+      date: cheapestTrip.return_date
+      departureTime: cheapestFlight.inbound.flights[0].departs_at.replace(/.*T/, '') # departure time of first flight
+      arrivalTime: cheapestFlight.inbound.flights[-1..][0].arrives_at.replace(/.*T/, '') # arrival time of last flight
 
 lookupTrips = (origin, departureDate) ->
   debug "api call: #{JSON.stringify({ origin, departureDate, duration: TRIP_DURATION })}"
@@ -72,7 +99,7 @@ lookupTrips = (origin, departureDate) ->
 lookupDetails = ({ origin, destination, departure_date, return_date }) ->
   params =
     origin: origin
-    destination: destination.code
+    destination: destination
     departure_date: departure_date
     return_date: return_date
     # TODO: set mobile to true depending on user's device
@@ -82,9 +109,6 @@ lookupDetails = ({ origin, destination, departure_date, return_date }) ->
     uri: 'https://api.sandbox.amadeus.com/v1.2/flights/affiliate-search'
     qs: params
     json: true
-  .then ({ results }) ->
-    console.log results
-    do process.exit
 
 getDepartureDate = ->
   FRIDAY = 5
@@ -92,10 +116,3 @@ getDepartureDate = ->
     return moment().isoWeekday(FRIDAY)
   else
     return moment().add(1, 'weeks').isoWeekday(FRIDAY)
-
-flatten = (arrays) ->
-  flattenedArray = []
-  for array in arrays
-    for elem in array
-      flattenedArray.push elem
-  return flattenedArray
