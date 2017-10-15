@@ -39,8 +39,8 @@ $(document).ready(function(){
 
 var getFlightData = function (location){
   $.ajax({
-    // url: 'http://hackathon-sun.herokuapp.com/flights',
-    url: 'http://localhost:3000/flights',
+    url: 'http://hackathon-sun.herokuapp.com/flights',
+    // url: 'http://localhost:3000/flights',
     data: { latitude: location.latitude, longitude: location.longitude }
   })
   .done(function(res){
