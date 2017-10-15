@@ -3,7 +3,7 @@ debug = require('debug')('hackathon-sun:locations')
 rp = require 'request-promise'
 
 weatherCacheTTL = process.env.WEATHER_CACHE_TTL or 3600
-weatherCache = new cache weatherCacheTTL
+weatherCache = new cache 'weather', weatherCacheTTL
 
 module.exports.find = (location) ->
   # We look up the weather by latitude and longitude, but cache it by location code.

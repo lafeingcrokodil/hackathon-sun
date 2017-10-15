@@ -1,15 +1,17 @@
+debug = require('debug')('hackathon-sun:cache')
 Promise = require 'bluebird'
 
-module.exports = (ttl) ->
+module.exports = (name, ttl) ->
   cache = {}
 
   (args..., fn) ->
     key = JSON.stringify args
-    Promise.try ->
-      { value, expiryTime } = cache[key] or {}
-      if value? and (not expiryTime or Date.now() < expiryTime)
-        return value
-      fn args...
-    .then (newValue) ->
-      cache[key] = { value: newValue, expiryTime: if ttl then Date.now() + ttl }
-      return newValue
+    { promise, expiryTime } = cache[key] or {}
+    if promise? and (not expiryTime or Date.now() < expiryTime)
+      debug "#{name} hit: #{key}"
+      return promise
+    else
+      debug "#{name} miss: #{key}"
+      promise = fn args...
+      cache[key] = { promise, expiryTime: if ttl then Date.now() + ttl }
+      return promise

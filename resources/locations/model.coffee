@@ -2,7 +2,7 @@ cache = require '../../lib/cache'
 debug = require('debug')('hackathon-sun:locations')
 rp = require 'request-promise'
 
-locationCache = new cache
+locationCache = new cache 'locations'
 
 module.exports.find = (code) ->
   locationCache code, lookup
