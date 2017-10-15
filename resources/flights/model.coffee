@@ -1,3 +1,4 @@
+cache = require '../../lib/cache'
 debug = require('debug')('hackathon-sun:flights')
 moment = require 'moment'
 request = require 'request-promise'
@@ -8,6 +9,9 @@ errors = require '../errors'
 airportModel = require '../airports/model'
 locationModel = require '../locations/model'
 weatherModel = require '../weather/model'
+
+flightCacheTTL = process.env.FLIGHT_CACHE_TTL or 60 * 60 * 1000 # one hour by default
+flightCache = new cache 'flights', flightCacheTTL
 
 BATCH_SIZE = 10
 TRIP_DURATION = 2
@@ -42,7 +46,7 @@ module.exports.find = ({ latitude, longitude }) ->
         .then (weather) ->
           if weather.isSunny
             trip.weather = weather
-            lookupDetails trip
+            getDetails trip
             .then ({ meta, results }) ->
               if results?.length > 0 and (not cheapestTrip or trip.price < cheapestTrip.price)
                 trip.carriers = meta.carriers
@@ -76,6 +80,9 @@ module.exports.find = ({ latitude, longitude }) ->
       departureTime: cheapestFlight.inbound.flights[0].departs_at.replace(/.*T/, '') # departure time of first flight
       arrivalTime: cheapestFlight.inbound.flights[-1..][0].arrives_at.replace(/.*T/, '') # arrival time of last flight
 
+getDetails = ({ origin, destination, departure_date, return_date }) ->
+  flightCache origin, destination, departure_date, return_date, lookupDetails
+
 lookupTrips = (origin, departureDate) ->
   debug "api call: #{JSON.stringify({ origin, departureDate, duration: TRIP_DURATION })}"
   request
@@ -96,12 +103,12 @@ lookupTrips = (origin, departureDate) ->
     errors.logger err
     return []
 
-lookupDetails = ({ origin, destination, departure_date, return_date }) ->
+lookupDetails = (origin, destination, departureDate, returnDate) ->
   params =
     origin: origin
     destination: destination
-    departure_date: departure_date
-    return_date: return_date
+    departure_date: departureDate
+    return_date: returnDate
     # TODO: set mobile to true depending on user's device
   debug "api call: #{JSON.stringify(params)}"
   params.apikey = process.env.AMADEUS_API_KEY
