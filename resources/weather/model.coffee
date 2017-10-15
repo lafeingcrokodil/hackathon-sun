@@ -27,7 +27,7 @@ lookup = ({ latitude, longitude }, endDate) -> (city, country, startDate) ->
   options = {
     uri: 'https://api.openweathermap.org/data/2.5/forecast/daily'
     qs: {
-      apikey: process.env.OPENWEATHERMAP_APP_ID
+      apikey: process.env.OPENWEATHERMAP_API_KEY
       lat: latitude
       lon: longitude
       cnt: 10 # get weather for next 10 days
