@@ -9,10 +9,16 @@ weatherCache = new cache 'weather', weatherCacheTTL
 # see https://openweathermap.org/weather-conditions
 SUNNY_IDS = [800, 801] # clear, few clouds
 
+KELVIN_OFFSET = 273.15
+MIN_TEMP = 20 + KELVIN_OFFSET # 20 °C in degrees Kelvin
+
 module.exports.find = (location, startDate, endDate) ->
   # We look up the weather by latitude, longitude, start date and end date,
   # but cache it by city, country and start date.
   weatherCache location.city, location.country, startDate, lookup(location, endDate)
+
+module.exports.toCelsius = (temperature) -> # in degrees Kelvin
+  return temperature - KELVIN_OFFSET
 
 lookup = ({ latitude, longitude }, endDate) -> (city, country, startDate) ->
   debug "api call: #{JSON.stringify({ latitude, longitude })}"
@@ -33,10 +39,19 @@ lookup = ({ latitude, longitude }, endDate) -> (city, country, startDate) ->
     startTime = moment(startDate).unix() # beginning of first day
     endTime = moment(endDate).add(1, 'day').unix() # end of last day
     isSunny = true
-    for day in res.list
-      if day.dt >= startTime and day.dt < endTime and day.weather.id not in SUNNY_IDS
+    temperatures = []
+    for day in res.list when day.dt >= startTime and day.dt < endTime
+      temperatures.push day.temp.max
+      weatherId = day.weather[0].id # we just consider the first weather object in the array
+      if weatherId not in SUNNY_IDS or day.temp.max < MIN_TEMP
         isSunny = false
     weather = {
-      temperature: res.main.temp
+      temperature: getAverage temperatures
       isSunny: isSunny
     }
+
+getAverage = (values) ->
+  return null unless values.length
+  sum = 0
+  sum += value for value in values
+  return sum / values.length
