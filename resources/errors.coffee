@@ -19,6 +19,14 @@ class BadRequestError extends Error
 
 module.exports.BadRequestError = BadRequestError
 
+class NotFoundError extends Error
+  name: 'NotFoundError'
+  status: 404
+  constructor: (message) ->
+    @message = "Not Found: #{message}"
+
+module.exports.NotFoundError = NotFoundError
+
 class UnknownLocationError extends Error
   name: 'UnknownLocationError'
   constructor: (location) ->
