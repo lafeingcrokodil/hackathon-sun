@@ -13,7 +13,6 @@
     "body-parser": "~1.18.2",
     "coffee-script": "^1.12.7",
     "cookie-parser": "~1.4.3",
-    "csv-parser": "^1.11.0",
     "debug": "~2.6.9",
     "express": "~4.15.5",
     "moment": "^2.19.1",
