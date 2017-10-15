@@ -3,7 +3,7 @@ debug = require('debug')('hackathon-sun:locations')
 moment = require 'moment'
 rp = require 'request-promise'
 
-weatherCacheTTL = process.env.WEATHER_CACHE_TTL or 3600
+weatherCacheTTL = process.env.WEATHER_CACHE_TTL or 60 * 60 * 1000 # one hour by default
 weatherCache = new cache 'weather', weatherCacheTTL
 
 # see https://openweathermap.org/weather-conditions

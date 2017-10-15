@@ -1,7 +1,7 @@
 debug = require('debug')('hackathon-sun:cache')
 Promise = require 'bluebird'
 
-module.exports = (name, ttl) ->
+module.exports = (name, ttl) -> # time to live in milliseconds
   cache = {}
 
   (args..., fn) ->
@@ -13,5 +13,5 @@ module.exports = (name, ttl) ->
     else
       debug "#{name} miss: #{key}"
       promise = fn args...
-      cache[key] = { promise, expiryTime: if ttl then Date.now() + ttl }
+      cache[key] = { promise, expiryTime: if ttl then Date.now() + 1000 * ttl }
       return promise
